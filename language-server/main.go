@@ -8,6 +8,8 @@ import (
 	"quran-lsp/lsp"
 	"quran-lsp/rpc"
 	"quran-lsp/server"
+	"strings"
+	"unicode"
 )
 
 func main() {
@@ -87,6 +89,30 @@ func HandleMessage(message []byte, state *server.State) ([]byte, error) {
 			didChangeNotification.Params.TextDocument.URI,
 			didChangeNotification.Params.ContentChanges[0].Text,
 		)
+	case "textDocument/hover":
+		var hoverMessage lsp.HoverMessage
+		if err := json.Unmarshal(message, &hoverMessage); err != nil {
+			return nil, err
+		}
+		log.Println("URI:", hoverMessage.Params.TextDocument.URI)
+		document, found := state.GetDocument(hoverMessage.Params.TextDocument.URI)
+		if found {
+			documentLines := strings.Split(document, "\n")
+			log.Printf("%#v\n", documentLines)
+			currentLine := documentLines[hoverMessage.Params.Position.Line]
+			firstSpace := strings.IndexFunc(currentLine, func(r rune) bool { return unicode.IsSpace(r) })
+			if firstSpace == -1 {
+				firstSpace = len(currentLine)
+			}
+			token := currentLine[hoverMessage.Params.Position.Character:firstSpace]
+			return rpc.Encode(
+				lsp.NewHoverResponse(
+					token,
+					hoverMessage.Id,
+				),
+			)
+		}
+		return rpc.Encode(lsp.NewHoverResponse("", hoverMessage.Id))
 	}
 	return nil, nil
 }
