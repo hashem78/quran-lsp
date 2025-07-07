@@ -36,7 +36,9 @@ func main() {
 			continue
 		}
 
-		// log.Println("Sending:", string(response))
+		if response != nil {
+			log.Println("Sending:", string(response))
+		}
 
 		_, err = writer.Write(response)
 		if err != nil {
@@ -75,6 +77,15 @@ func HandleMessage(message []byte, state *server.State) ([]byte, error) {
 		state.SetDocument(
 			didOpenNotification.Params.TextDocument.URI,
 			didOpenNotification.Params.TextDocument.Text,
+		)
+	case "textDocument/didChange":
+		var didChangeNotification lsp.DidChangeNotification
+		if err := json.Unmarshal(message, &didChangeNotification); err != nil {
+			return nil, err
+		}
+		state.SetDocument(
+			didChangeNotification.Params.TextDocument.URI,
+			didChangeNotification.Params.ContentChanges[0].Text,
 		)
 	}
 	return nil, nil

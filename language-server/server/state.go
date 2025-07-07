@@ -76,10 +76,10 @@ type StateTrace struct {
 func (s *State) Dump() string {
 
 	trace := []StateTrace{}
-	for i := range s.events {
+	for i := range s.latestStateIndex + 1 {
 		trace = append(trace, StateTrace{
 			Event: s.events[i],
-			State: s.internalState[i+1],
+			State: s.internalState[i],
 		})
 	}
 	marshalled, _ := json.MarshalIndent(trace, "", "  ")
@@ -91,8 +91,10 @@ func NewServerState() *State {
 		internalState: []*internalState{{
 			OpenDocuments: map[string]string{},
 		}},
-		callbacks:        []Callback{},
-		events:           []StateEvent{},
+		callbacks: []Callback{},
+		events: []StateEvent{
+			ServerStartEvent{},
+		},
 		latestStateIndex: 0,
 	}
 }
