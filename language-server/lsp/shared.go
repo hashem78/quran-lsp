@@ -25,3 +25,7 @@ type Range struct {
 	Start Position `json:"start"`
 	End   Position `json:"end"`
 }
+
+type WorkDoneProgressOptions struct {
+	WorkDoneProgress bool `json:"workDoneProgress,omitempty"`
+}

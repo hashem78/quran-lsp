@@ -25,8 +25,9 @@ type InitializeResponse struct {
 }
 
 type ServerCapabilities struct {
-	TextDocumentSync int  `json:"textDocumentSync,omitempty"`
-	HoverProvider    bool `json:"hoverProvider"`
+	TextDocumentSync   int               `json:"textDocumentSync,omitempty"`
+	HoverProvider      bool              `json:"hoverProvider"`
+	CompletionProvider CompletionOptions `json:"completionProvider"`
 }
 
 type ServerInfo struct {

@@ -27,7 +27,7 @@ func main() {
 
 	state := server.NewServerState()
 	state.AddListener(server.ANY, func(_ server.StateEvent) {
-		log.Println(state.Dump())
+		// log.Println(state.Dump())
 	})
 
 	for scanner.Scan() {
@@ -58,7 +58,7 @@ func HandleMessage(message []byte, state *server.State) ([]byte, error) {
 		log.Printf("An error occured while deocoding message, %v", err)
 	}
 
-	log.Println("Recieved:", decodedMessage.Method)
+	log.Println("Recieved:", string(message))
 	switch decodedMessage.Method {
 	case "initialize":
 		var initializeMessage lsp.InitializeMessage
@@ -94,11 +94,9 @@ func HandleMessage(message []byte, state *server.State) ([]byte, error) {
 		if err := json.Unmarshal(message, &hoverMessage); err != nil {
 			return nil, err
 		}
-		log.Println("URI:", hoverMessage.Params.TextDocument.URI)
 		document, found := state.GetDocument(hoverMessage.Params.TextDocument.URI)
 		if found {
 			documentLines := strings.Split(document, "\n")
-			log.Printf("%#v\n", documentLines)
 			currentLine := documentLines[hoverMessage.Params.Position.Line]
 			firstSpace := strings.IndexFunc(currentLine, func(r rune) bool { return unicode.IsSpace(r) })
 			if firstSpace == -1 {
@@ -113,6 +111,12 @@ func HandleMessage(message []byte, state *server.State) ([]byte, error) {
 			)
 		}
 		return rpc.Encode(lsp.NewHoverResponse("", hoverMessage.Id))
+	case "textDocument/completion":
+		var completionMessage lsp.CompletionMessage
+		if err := json.Unmarshal(message, &completionMessage); err != nil {
+			return nil, err
+		}
+		return rpc.Encode(lsp.NewCompletionsItemResponse(completionMessage.Id, completionMessage.Params.Position))
 	}
 	return nil, nil
 }
